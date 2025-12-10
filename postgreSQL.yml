@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: tag-wallet-postgreSQL-db
+    environment:
+      POSTGRES_USER: codebeginner000001         # custom superuser
+      POSTGRES_PASSWORD: codeB@egin00ner@#
+      POSTGRES_DB:  postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ~/Database/postgreSql/tag-wallet-data/pgdata:/var/lib/postgresql/data
+      - ~/Database/postgreSql/tag-wallet-data/init-db:/docker-entrypoint-initdb.d
+volumes:
+  pgdata:

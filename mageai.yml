@@ -1,0 +1,29 @@
+services:
+  mageai:
+    image: mageai/mageai:latest #image name - what type of image u want to pull
+    container_name: mageai #container name
+    ports:
+      - "6789:6789" #port mapping
+    environment:
+      REQUIRE_USER_AUTHENTICATION: 1 #enabling authentication
+    volumes:
+      - ~/MageAI/MageAI_data:/home/src #volume mounting 
+    # start mage ai with the project name so each start will load the data in the project
+    # adjust the start command to change the repo and a default repo is set if not passed
+    command: mage start ${MAGE_REPO:-default_repo} 
+
+# setting up alias 
+
+# In MAC 
+# ----- File where we step up alias -----
+# we setup alias in the .zshrc document, it can be directly viewed in the finder in user name by pressing 'cmd+shift+.'
+# or in the terminal by writting 'nano .zshrc'
+
+# ----- Write alias command line -----
+# alias mageai_up='function _mage_up(){ MAGE_REPO=$1 docker compose -f "~/Desktop/developed items/docker images/mageai.yml" up -d; }; _mage_up'
+# termninal cmd - mageai_up a_repo
+
+# ----- learnings -------
+# why write a function? - because aliases can't take arguments directly
+# so if we write like -- alias mageai_up='MAGE_REPO=$1 docker compose -f "~/Desktop/developed items/docker images/mageai.yml" up -d' it won't work
+# so correct form is -- alias mageai_up='function _mage_up(){ MAGE_REPO=$1 docker compose -f "~/Desktop/developed items/docker images/mageai.yml" up -d; }; _mage_up'

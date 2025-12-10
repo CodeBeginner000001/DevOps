@@ -1,0 +1,16 @@
+services:
+  redis:
+    image: redis:7
+    container_name: tag-wallet-redis-db
+    command: >
+      sh -c "echo 'user default off' > /tmp/aclfile &&
+             echo 'user tag_wallet on >tagedbjfDFib@ ~* +@all' >> /tmp/aclfile &&
+             redis-server --appendonly yes --aclfile /tmp/aclfile"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ~/Database/redisDB/tag-wallet-data:/data   # attach existing volume
+
+volumes:
+  redisdata:
+    # external: true            # tells Docker not to create a new one
