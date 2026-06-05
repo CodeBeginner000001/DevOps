@@ -1,15 +1,134 @@
+# docker-compose.yml
+
 services:
   postgres:
-    image: postgres:16
-    container_name: tag-wallet-postgreSQL-db
+    # PostgreSQL image.
+    # You used postgres:18.
+    # If Docker cannot pull postgres:18, use postgres:17 or postgres:16.
+    image: postgres:18
+
+    # Fixed container name.
+    # Useful commands:
+    # docker logs universal-postgres
+    # docker exec -it universal-postgres bash
+    container_name: universal-postgres
+
+    # Restart automatically unless manually stopped.
+    restart: unless-stopped
+
     environment:
-      POSTGRES_USER: codebeginner000001         # custom superuser
-      POSTGRES_PASSWORD: codeB@egin00ner@#
-      POSTGRES_DB:  postgres
+      # Main PostgreSQL superuser.
+      # This user can create databases, users, schemas, etc.
+      POSTGRES_USER: codebeginner000001
+
+      # Password for the superuser.
+      # Special characters are okay here because this is not a URL.
+      POSTGRES_PASSWORD: "codeB@egin00ner@#"
+
+      # Default database created on first startup.
+      # Keep this as postgres for admin/default connection.
+      POSTGRES_DB: postgres
+
+      # Optional but useful.
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    # Host port mapping:
+    # localhost:5432 -> container:5432
+    #
+    # From your Mac/local machine:
+    # localhost:5432
+    #
+    # From another Docker container:
+    # postgres:5432
     ports:
       - "5432:5432"
+
     volumes:
-      - ~/Database/postgreSql/tag-wallet-data/pgdata:/var/lib/postgresql/data
-      - ~/Database/postgreSql/tag-wallet-data/init-db:/docker-entrypoint-initdb.d
-volumes:
-  pgdata:
+      # \~\ - it's a short path for the root directory for a user in macOS
+      # Persistent PostgreSQL data.
+      # Your database files will be stored on your Mac at:
+      # \~/Database/postgreSql/pgdata
+      - ~/Database/postgreSql/pgdata:/var/lib/postgresql/data
+
+      # Optional init scripts.
+      # Any .sql or .sh file inside this folder runs only on FIRST initialization.
+      #
+      # Example:
+      # \~/Database/postgreSql/init-db/001-create-project-dbs.sql
+      #
+      # Important:
+      # These scripts do not run again if pgdata already exists.
+      - ~/Database/postgreSql/init-db:/docker-entrypoint-initdb.d
+
+    networks:
+      postgres_network:
+        aliases:
+          # Docker aliases.
+          # Other containers on the same network can connect using:
+          # postgres
+          # postgres-db
+          # postgres.local
+          # universal-postgres
+          - postgres
+          - postgres-db
+          - postgres.local
+          - universal-postgres
+
+# Custom Docker network.
+# Other project containers can join this network and connect to PostgreSQL.
+networks:
+  postgres_network:
+    name: universal-postgres-network
+    driver: bridge
+
+# Project database mapping:
+#
+# postgres              -> default/admin database
+# vaultpass_db          -> VaultPass project
+# todo_db               -> Todo App
+# qr_db                 -> QR Code App
+# shorturl_db           -> URL Shortener
+# auth_db               -> Auth experiments
+# test_db               -> Testing
+#
+# Local machine URLs:
+#
+# VaultPass:
+# postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/vaultpass_db
+#
+# Todo App:
+# postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/todo_db
+#
+# QR Code App:
+# postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/qr_db
+#
+# URL Shortener:
+# postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/shorturl_db
+#
+# Auth:
+# postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/auth_db
+
+
+# Setting up env for a project
+#
+# DATABASE_HOST=localhost
+# DATABASE_PORT=5432
+# DATABASE_USER=codebeginner000001
+# DATABASE_PASSWORD=codeB@egin00ner@#
+# DATABASE_NAME=vaultpass_db
+# DATABASE_URL=postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/vaultpass_db
+#
+# DATABASE_HOST=localhost
+# DATABASE_PORT=5432
+# DATABASE_USER=codebeginner000001
+# DATABASE_PASSWORD=codeB@egin00ner@#
+# DATABASE_NAME=todo_db
+# DATABASE_URL=postgresql://codebeginner000001:codeB%40egin00ner%40%23@localhost:5432/todo_db
+
+
+# If running a another docker comtainer in the same machine
+#
+# DATABASE_URL=postgresql://codebeginner000001:codeB%40egin00ner%40%23@postgres:5432/vaultpass_db
+# DATABASE_URL=postgresql://codebeginner000001:codeB%40egin00ner%40%23@postgres-db:5432/vaultpass_db
+# DATABASE_URL=postgresql://codebeginner000001:codeB%40egin00ner%40%23@postgres.local:5432/vaultpass_db
+# DATABASE_URL=postgresql://codebeginner000001:codeB%40egin00ner%40%23@universal-postgres:5432/vaultpass_db

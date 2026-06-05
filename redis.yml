@@ -1,16 +1,127 @@
 services:
   redis:
-    image: redis:7
-    container_name: tag-wallet-redis-db
+    image: redis:7-alpine
+
+    # Fixed container name.
+    # You can use this name in Docker commands:
+    # docker logs universal-redis
+    # docker exec -it universal-redis sh
+    container_name: universal-redis
+
+    # Always restart Redis unless you manually stop it.
+    restart: unless-stopped
+
+    # Redis ACL setup:
+    # - disables default user
+    # - creates user: redis
+    # - password: redAedbjfDFib@
+    # - allows all keys and commands
+    #
+    # --appendonly yes:
+    # Redis will persist data to disk using AOF.
+    #
+    # --databases 32:
+    # Creates logical DB indexes from 0 to 31.
     command: >
-      sh -c "echo 'user default off' > /tmp/aclfile &&
-             echo 'user tag_wallet on >tagedbjfDFib@ ~* +@all' >> /tmp/aclfile &&
-             redis-server --appendonly yes --aclfile /tmp/aclfile"
+      sh -c "cat > /tmp/aclfile <<EOF
+      user default off
+      user redis on >redAedbjfDFib@ ~* +@all
+      EOF
+      redis-server
+      --appendonly yes
+      --aclfile /tmp/aclfile
+      --databases 32"
+
+    # Host port mapping:
+    # localhost:6379 -> container:6379
+    #
+    # Use this when connecting from your local machine:
+    # redis://redis:redAedbjfDFib%40@localhost:6379/1
     ports:
       - "6379:6379"
-    volumes:
-      - ~/Database/redisDB/tag-wallet-data:/data   # attach existing volume
 
-volumes:
-  redisdata:
-    # external: true            # tells Docker not to create a new one
+    # Persistent local storage.
+    # Redis data will be stored on your Mac at:
+    # \~/Database/redisDB
+    volumes:
+    # \~\ - it's a short path for the root directory for a user in macOS
+      - ~/Database/redisDB:/data 
+
+    # Custom Docker network.
+    # Other Docker containers can connect to Redis using:
+    # redis
+    # universal-redis
+    # redis.local
+    # redis-db
+    networks:
+      redis_network:
+        aliases:
+          - redis
+          - redis-db
+          - redis.local
+          - universal-redis
+
+# Custom network for Redis.
+# If your project containers join this same network,
+# they can connect to Redis using the alias name instead of localhost.
+networks:
+  redis_network:
+    name: universal-redis-network
+    driver: bridge
+
+# Connect using redis-cli inside the container:
+# redis-cli -u redis://redis:redAedbjfDFib%40@localhost:6379
+
+# Project DB mapping:
+#
+# DB 0  -> default/shared
+# DB 1  -> VaultPass
+# DB 2  -> Todo App
+# DB 3  -> QR Code App
+# DB 4  -> URL Shortener
+# DB 5  -> Auth Experiments
+# DB 6  -> Testing
+#
+# Local machine URLs:
+#
+# VaultPass:
+# redis://redis:redAedbjfDFib%40@localhost:6379/1
+#
+# Todo-App:
+# redis://redis:redAedbjfDFib%40@localhost:6379/2
+#
+# QR Code App:
+# redis://redis:redAedbjfDFib%40@localhost:6379/3
+#
+# URL Shortener:
+# redis://redis:redAedbjfDFib%40@localhost:6379/4
+#
+# Auth Experiments:
+# redis://redis:redAedbjfDFib%40@localhost:6379/5
+
+
+# Setting up env for a project
+#
+# REDIS_URL=redis://redis:redAedbjfDFib%40@localhost:6379/1
+# REDIS_HOST=localhost
+# REDIS_PORT=6379
+# REDIS_USERNAME=redis
+# REDIS_PASSWORD=redAedbjfDFib@
+# REDIS_DATABASE=1
+# REDIS_KEY_PREFIX=vaultpass
+#
+# REDIS_URL=redis://redis:redAedbjfDFib%40@localhost:6379/4
+# REDIS_HOST=localhost
+# REDIS_PORT=6379
+# REDIS_USERNAME=redis
+# REDIS_PASSWORD=redAedbjfDFib@
+# REDIS_DATABASE=4
+# REDIS_KEY_PREFIX=shorturl
+
+
+# If running a another docker comtainer in the same machine
+#
+# REDIS_URL=redis://redis:redAedbjfDFib%40@redis:6379/1
+# REDIS_URL=redis://redis:redAedbjfDFib%40@redis-db:6379/1
+# REDIS_URL=redis://redis:redAedbjfDFib%40@redis.local:6379/1
+# REDIS_URL=redis://redis:redAedbjfDFib%40@universal-redis:6379/1
