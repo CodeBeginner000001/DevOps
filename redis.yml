@@ -22,7 +22,7 @@ services:
     #
     # --databases 32:
     # Creates logical DB indexes from 0 to 31.
-    command: >
+    command: |
       sh -c "cat > /tmp/aclfile <<EOF
       user default off
       user redis on >redAedbjfDFib@ ~* +@all
