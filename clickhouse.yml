@@ -1,0 +1,43 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8.28.1
+
+    container_name: universal-clickhouse
+
+    restart: unless-stopped
+
+    environment:
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: "codeB@egin00ner@#"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+
+    volumes:
+      - ~/Database/clickhouse/data:/var/lib/clickhouse
+      - ~/Database/clickhouse/logs:/var/log/clickhouse-server
+      - ~/Database/clickhouse/init-db:/docker-entrypoint-initdb.d
+
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "clickhouse-client",
+          "--user",
+          "admin",
+          "--password",
+          "codeB@egin00ner@#",
+          "--query",
+          "SELECT 1"
+        ]
+
+networks:
+  default:
+    name: universal-database-network

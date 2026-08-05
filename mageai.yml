@@ -27,3 +27,6 @@ services:
 # why write a function? - because aliases can't take arguments directly
 # so if we write like -- alias mageai_up='MAGE_REPO=$1 docker compose -f "~/Desktop/developed items/docker images/mageai.yml" up -d' it won't work
 # so correct form is -- alias mageai_up='function _mage_up(){ MAGE_REPO=$1 docker compose -f "~/Desktop/developed items/docker images/mageai.yml" up -d; }; _mage_up'
+# default user password and user name
+# username - admin@admin.com
+# password - admin
